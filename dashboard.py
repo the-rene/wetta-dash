@@ -75,9 +75,11 @@ def draw_temp_graph(df, time_label):
             x=df[time_label],
             y=df["temp_outdoor_c_min"],
             name="Min",
-            mode="markers",
+            mode="markers+text",
             marker_color="blue",
             hovertemplate=None,
+            texttemplate="%{y:.1f}°C",
+            textposition="bottom center"
         )
     )
     fig.add_trace(
@@ -85,9 +87,11 @@ def draw_temp_graph(df, time_label):
             x=df[time_label],
             y=df["temp_outdoor_c_max"],
             name="Max",
-            mode="markers",
+            mode="markers+text",
             marker_color="red",
             hovertemplate=None,
+            texttemplate="%{y:.1f}°C",
+            textposition="top center"
         )
     )
     fig.update_layout(hovermode="x")
@@ -97,7 +101,7 @@ def draw_temp_graph(df, time_label):
 
 def draw_rain_graph(df, time_label):
     fig = go.Figure()
-    fig.add_bar(x=df[time_label], y=df["rain_mm"], text=df["rain_mm"],textposition="auto")
+    fig.add_bar(x=df[time_label], y=df["rain_mm"],textposition="auto",texttemplate="%{y:.2f}mm")
     fig.update_layout(hovermode="y")
     fig.update_yaxes(title_text="Niederschlag (mm)")
     return fig
