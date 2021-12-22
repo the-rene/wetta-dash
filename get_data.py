@@ -6,6 +6,8 @@ from sqlalchemy import create_engine
 from current_data import CURRENT_DATA_COLUMNS
 from db_secrets import connection_data
 
+EARLIEST_DATE = date(2021, 7, 23)
+
 
 def init_connection():
     connection_string = (
