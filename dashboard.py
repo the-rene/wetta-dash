@@ -11,69 +11,122 @@ from dash.exceptions import PreventUpdate
 
 from current_data import CURRENT_DATA_COLUMNS
 from current_data import dashboard_html
-from get_data import get_hourly_values, get_daily_values, get_current_data, EARLIEST_DATE
+from get_data import (
+    get_hourly_values,
+    get_daily_values,
+    get_current_data,
+    EARLIEST_DATE,
+)
 
 external_scripts = ["https://cdn.plot.ly/plotly-locale-de-latest.js"]
 external_stylesheets = [
     "https://use.fontawesome.com/releases/v5.9.0/css/all.css",
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css"
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css",
 ]
-app = dash.Dash(__name__, external_scripts=external_scripts, external_stylesheets=external_stylesheets)
+app = dash.Dash(
+    __name__,
+    external_scripts=external_scripts,
+    external_stylesheets=external_stylesheets,
+    title="Wetta",
+)
 server = app.server
 
 config_plots = dict(locale="de")
-current_layout = [
-    html.Div(id="current-time", children="Lädt..."),
-    html.Div(children=dashboard_html()),
-    dcc.Interval(id="minute-interval", interval=60 * 1000),
-]
-date_form = dbc.Form([
-    dbc.Label("Zeitraum für Wetterdaten angeben:"),
-    dbc.Row([
-        dbc.Col(width=3, children=[
-            dbc.Label("Von"),
-            dbc.Input(id="date-from", type="date", value=date.today() - timedelta(days=8), min=EARLIEST_DATE,
-                      max=date.today(), required=True),
-        ]),
+current_layout = html.Div(
+    [
+        html.Div(id="current-time", children="Lädt...", style={"fontSize": "1rem"}),
+        dashboard_html(),
+        dcc.Interval(id="minute-interval", interval=60 * 1000),
+    ]
+)
 
-        dbc.Col(width=3, children=[
-            dbc.Label("Bis"),
-            dbc.Input(id="date-to", type="date", value=date.today(), min=EARLIEST_DATE, max=date.today(),
-                      required=True),
-        ])]),
-    dbc.Row([
-        dbc.Col([
-            dbc.Label("Interval:"),
-            dbc.RadioItems(
-                options=[
-                    {'label': 'Täglich', 'value': 'daily'},
-                    {'label': 'Stündlich', 'value': 'hourly'},
-                ],
-                value='daily',
-                id="check-period",
-            )], width=6)
-    ]),
-])
-historical_layout = dbc.Container([
-    date_form,
-    dbc.Row([
-        dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
-        dbc.Col(dcc.Graph(id="outdoor-temp-graph", config=config_plots), width=12)
-    ]),
-],fluid=True)
+date_form = dbc.Form(
+    [
+        dbc.Label("Zeitraum für Wetterdaten angeben:"),
+        dbc.Row(
+            [
+                dbc.Col(
+                    width=3,
+                    children=[
+                        dbc.Label("Von"),
+                        dbc.Input(
+                            id="date-from",
+                            type="date",
+                            value=date.today() - timedelta(days=8),
+                            min=EARLIEST_DATE,
+                            max=date.today(),
+                            required=True,
+                        ),
+                    ],
+                ),
+                dbc.Col(
+                    width=3,
+                    children=[
+                        dbc.Label("Bis"),
+                        dbc.Input(
+                            id="date-to",
+                            type="date",
+                            value=date.today(),
+                            min=EARLIEST_DATE,
+                            max=date.today(),
+                            required=True,
+                        ),
+                    ],
+                ),
+            ]
+        ),
+        dbc.Row(
+            [
+                dbc.Col(
+                    [
+                        dbc.Label("Interval:"),
+                        dbc.RadioItems(
+                            options=[
+                                {"label": "Täglich", "value": "daily"},
+                                {"label": "Stündlich", "value": "hourly"},
+                            ],
+                            value="daily",
+                            id="check-period",
+                        ),
+                    ],
+                    width=6,
+                )
+            ]
+        ),
+    ]
+)
+historical_layout = dbc.Container(
+    [
+        date_form,
+        dbc.Row(
+            [
+                dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
+                dbc.Col(
+                    dcc.Graph(id="outdoor-temp-graph", config=config_plots), width=12
+                ),
+            ]
+        ),
+    ],
+    fluid=True,
+)
 
-app.layout = dbc.Container(fluid=True,children=[
-    html.H1(children="Wetta Wilsum"),
-    dbc.Tabs(children=[
-        dbc.Tab(label="Aktuelle Daten", children=current_layout),
-        dbc.Tab(label="Historische Daten", children=historical_layout)
-    ])
-]
+app.layout = dbc.Container(
+    fluid=True,
+    style={"fontSize": "1.5rem"},
+    children=[
+        html.H1(children="Wetta Wilsum"),
+        dbc.Tabs(
+            children=[
+                dbc.Tab(label="Aktuelle Daten", children=current_layout),
+                dbc.Tab(label="Historische Daten", children=historical_layout),
+            ]
+        ),
+    ],
 )
 
 
 def draw_temp_graph(df, time_label):
-    fig = go.Figure(layout=go.Layout(margin={'l': 0, 'r': 0, 't': 20, 'b': 20}))
+    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}))
     text_template = "%{y:.1f}°C" if len(df) <= 30 else None
     fig.add_trace(
         go.Scatter(
@@ -94,7 +147,7 @@ def draw_temp_graph(df, time_label):
             marker_color="blue",
             hovertemplate=None,
             texttemplate=text_template,
-            textposition="bottom center"
+            textposition="bottom center",
         )
     )
     fig.add_trace(
@@ -106,7 +159,7 @@ def draw_temp_graph(df, time_label):
             marker_color="red",
             hovertemplate=None,
             texttemplate=text_template,
-            textposition="top center"
+            textposition="top center",
         )
     )
     fig.update_layout(hovermode="x")
@@ -115,8 +168,13 @@ def draw_temp_graph(df, time_label):
 
 
 def draw_rain_graph(df, time_label):
-    fig = go.Figure(layout=go.Layout(margin={'l': 0, 'r': 0, 't': 20, 'b': 20}))
-    fig.add_bar(x=df[time_label], y=df["rain_mm"], textposition="auto", texttemplate="%{y:.2f}mm")
+    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}))
+    fig.add_bar(
+        x=df[time_label],
+        y=df["rain_mm"],
+        textposition="auto",
+        texttemplate="%{y:.2f}mm",
+    )
     fig.update_yaxes(title_text="Niederschlag (mm)")
     return fig
 
@@ -134,7 +192,8 @@ def update_current(_):
 
 
 @app.callback(
-    Output("date-from", "max"), Output("date-to", "max"),
+    Output("date-from", "max"),
+    Output("date-to", "max"),
     [Input("minute-interval", "n_intervals")],
 )
 def update_date_picker(_):
@@ -142,14 +201,15 @@ def update_date_picker(_):
 
 
 @app.callback(
-    Output("date-from", "value"), Output("date-to", "value"),
+    Output("date-from", "value"),
+    Output("date-to", "value"),
     [Input("date-from", "value"), Input("date-to", "value")],
 )
 def update_date_from_picker(date_from_str, date_to_str):
     ctx = dash.callback_context
     if not ctx.triggered:
         raise PreventUpdate
-    trigger = ctx.triggered[0]['prop_id'].split('.')[0]
+    trigger = ctx.triggered[0]["prop_id"].split(".")[0]
     date_from = date.fromisoformat(date_from_str)
     date_to = date.fromisoformat(date_to_str)
     if date_from > date_to:
@@ -166,11 +226,19 @@ def update_date_from_picker(date_from_str, date_to_str):
 @app.callback(
     Output("outdoor-temp-graph", "figure"),
     Output("rain-graph", "figure"),
-    [Input("date-from", "value"), Input("date-to", "value"), Input("check-period", "value")],
+    [
+        Input("date-from", "value"),
+        Input("date-to", "value"),
+        Input("check-period", "value"),
+    ],
 )
 def update_historical(date_from_str, date_to_str, check_period):
     date_from = datetime.date.fromisoformat(date_from_str)
-    date_to = datetime.date.fromisoformat(date_to_str) + timedelta(days=1) - timedelta(minutes=1)
+    date_to = (
+        datetime.date.fromisoformat(date_to_str)
+        + timedelta(days=1)
+        - timedelta(minutes=1)
+    )
 
     match check_period:
         case "hourly":
@@ -184,4 +252,4 @@ def update_historical(date_from_str, date_to_str, check_period):
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(debug=True, host="0.0.0.0")
