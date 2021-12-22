@@ -22,50 +22,58 @@ app = dash.Dash(__name__, external_scripts=external_scripts, external_stylesheet
 server = app.server
 
 config_plots = dict(locale="de")
-app.layout = dbc.Container(children=[
+current_layout = [
+    html.Div(id="current-time", children="Lädt..."),
+    html.Div(children=dashboard_html()),
+    dcc.Interval(id="minute-interval", interval=60 * 1000),
+]
+date_form = dbc.Form([
+    dbc.Label("Zeitraum für Wetterdaten angeben:"),
+    dbc.Row([
+        dbc.Col(width=3, children=[
+            dbc.Label("Von"),
+            dbc.Input(id="date-from", type="date", value=date.today() - timedelta(days=8), min=EARLIEST_DATE,
+                      max=date.today(), required=True),
+        ]),
+
+        dbc.Col(width=3, children=[
+            dbc.Label("Bis"),
+            dbc.Input(id="date-to", type="date", value=date.today(), min=EARLIEST_DATE, max=date.today(),
+                      required=True),
+        ])]),
+    dbc.Row([
+        dbc.Col([
+            dbc.Label("Interval:"),
+            dbc.RadioItems(
+                options=[
+                    {'label': 'Täglich', 'value': 'daily'},
+                    {'label': 'Stündlich', 'value': 'hourly'},
+                ],
+                value='daily',
+                id="check-period",
+            )], width=6)
+    ]),
+])
+historical_layout = dbc.Container([
+    date_form,
+    dbc.Row([
+        dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
+        dbc.Col(dcc.Graph(id="outdoor-temp-graph", config=config_plots), width=12)
+    ]),
+],fluid=True)
+
+app.layout = dbc.Container(fluid=True,children=[
     html.H1(children="Wetta Wilsum"),
     dbc.Tabs(children=[
-        dbc.Tab(label="Aktuelle Daten", children=[
-            html.Div(id="current-time", children="Lädt..."),
-            html.Div(children=dashboard_html()),
-            dcc.Interval(id="minute-interval", interval=60 * 1000),
-        ]),
-        dbc.Tab(label="Historische Daten", children=[
-            dbc.Card(
-                children="Zeitraum für Wetterdaten angeben:"
-            ),
-            dbc.Form(children=[
-                html.Div(className="mb-3", children=[
-                    html.Label("Von"),
-                    dbc.Input(id="date-from", type="date", value=date.today() - timedelta(days=8), min=EARLIEST_DATE,
-                              max=date.today(), required=True),
-                ]),
-
-                html.Div(className="mb-3", children=[
-                    html.Label("Bis"),
-                    dbc.Input(id="date-to", type="date", value=date.today(), min=EARLIEST_DATE, max=date.today(),
-                              required=True),
-                ]),
-                html.Div(className="mb-3", children=[
-                    dbc.RadioItems(
-                        options=[
-                            {'label': 'Täglich', 'value': 'daily'},
-                            {'label': 'Stündlich', 'value': 'hourly'},
-                        ],
-                        value='daily',
-                        id="check-period",
-                    )]),
-            ]),
-            html.Div(className="row", children=[
-                dcc.Graph(id="rain-graph", config=config_plots, className="col-xl-12")]),
-            dcc.Graph(id="outdoor-temp-graph", config=config_plots, className="col-xl-12"),
-        ]
-                )])]
+        dbc.Tab(label="Aktuelle Daten", children=current_layout),
+        dbc.Tab(label="Historische Daten", children=historical_layout)
+    ])
+]
 )
 
 
 def draw_temp_graph(df, time_label):
-    fig = go.Figure()
+    fig = go.Figure(layout=go.Layout(margin={'l': 0, 'r': 0, 't': 20, 'b': 20}))
     text_template = "%{y:.1f}°C" if len(df) <= 30 else None
     fig.add_trace(
         go.Scatter(
@@ -107,7 +115,7 @@ def draw_temp_graph(df, time_label):
 
 
 def draw_rain_graph(df, time_label):
-    fig = go.Figure()
+    fig = go.Figure(layout=go.Layout(margin={'l': 0, 'r': 0, 't': 20, 'b': 20}))
     fig.add_bar(x=df[time_label], y=df["rain_mm"], textposition="auto", texttemplate="%{y:.2f}mm")
     fig.update_yaxes(title_text="Niederschlag (mm)")
     return fig
