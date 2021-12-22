@@ -1,0 +1,5 @@
+.idea/
+.venv/
+__pycache__/
+/docker-compose.yml
+/*secrets.py
