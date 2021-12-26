@@ -111,9 +111,8 @@ historical_layout = dbc.Container(
         html.P(
             [
                 html.Span(id="picked-date-from"),
-                html.Span("bis"),
                 html.Span(id="picked-date-to"),
-            ]
+            ], hidden=True # hidden. only used to render changed dates before redering graphs
         ),
     ],
     fluid=True,
