@@ -19,7 +19,7 @@ def init_connection():
 
 
 def date_filter_string(date_start: date, date_end: date, time_label="timestamp_tz"):
-    return f"{time_label} >= '{date_start.isoformat()}' and {time_label} <= '{date_end.isoformat()}'"
+    return f"DATE({time_label}) >= '{date_start.isoformat()}' and DATE({time_label}) <= '{date_end.isoformat()}'"
 
 
 def get_daily_values(date_start: date, date_end: date, db_connection=None):
