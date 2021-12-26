@@ -33,7 +33,7 @@ config_plots = dict(locale="de")
 current_layout = html.Div(
     [
         html.Div(id="current-time", children="Lädt...", style={"fontSize": "1rem"}),
-        dbc.Spinner(dashboard_html(), color="info"),
+        dashboard_html(),
         dcc.Interval(id="minute-interval", interval=60 * 1000),
     ]
 )
@@ -96,23 +96,27 @@ date_form = dbc.Form(
 historical_layout = dbc.Container(
     [
         date_form,
-        dbc.Spinner(
-            dbc.Row(
-                [
+        dbc.Row(
+            [
+                dbc.Spinner(
                     dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
+                    color="info",
+                ),
+                dbc.Spinner(
                     dbc.Col(
                         dcc.Graph(id="outdoor-temp-graph", config=config_plots),
                         width=12,
                     ),
-                ]
-            ),
-            color="info",
+                    color="info",
+                ),
+            ]
         ),
         html.P(
             [
                 html.Span(id="picked-date-from"),
                 html.Span(id="picked-date-to"),
-            ], hidden=True # hidden. only used to render changed dates before redering graphs
+            ],
+            hidden=True,  # hidden. only used to render changed dates before redering graphs
         ),
     ],
     fluid=True,
