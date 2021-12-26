@@ -1,4 +1,3 @@
-import datetime
 from datetime import timedelta, date
 
 import dash
@@ -6,8 +5,7 @@ import dash_bootstrap_components as dbc
 import plotly.graph_objs as go
 from dash import dcc
 from dash import html
-from dash.dependencies import Input, Output
-from dash.exceptions import PreventUpdate
+from dash.dependencies import Input, Output, State
 
 from current_data import CURRENT_DATA_COLUMNS
 from current_data import dashboard_html
@@ -35,7 +33,7 @@ config_plots = dict(locale="de")
 current_layout = html.Div(
     [
         html.Div(id="current-time", children="Lädt...", style={"fontSize": "1rem"}),
-        dashboard_html(),
+        dbc.Spinner(dashboard_html(), color="info"),
         dcc.Interval(id="minute-interval", interval=60 * 1000),
     ]
 )
@@ -98,12 +96,23 @@ date_form = dbc.Form(
 historical_layout = dbc.Container(
     [
         date_form,
-        dbc.Row(
+        dbc.Spinner(
+            dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
+                    dbc.Col(
+                        dcc.Graph(id="outdoor-temp-graph", config=config_plots),
+                        width=12,
+                    ),
+                ]
+            ),
+            color="info",
+        ),
+        html.P(
             [
-                dbc.Col(dcc.Graph(id="rain-graph", config=config_plots), width=12),
-                dbc.Col(
-                    dcc.Graph(id="outdoor-temp-graph", config=config_plots), width=12
-                ),
+                html.Span(id="picked-date-from"),
+                html.Span("bis"),
+                html.Span(id="picked-date-to"),
             ]
         ),
     ],
@@ -196,49 +205,60 @@ def update_current(_):
     Output("date-to", "max"),
     [Input("minute-interval", "n_intervals")],
 )
-def update_date_picker(_):
+def update_date_picker_max(_):
     return date.today(), date.today()
 
 
+def get_trigger_source():
+    ctx = dash.callback_context
+    trigger = ctx.triggered[0]["prop_id"].split(".")[0]
+    return trigger
+
+
 @app.callback(
+    Output("picked-date-from", "children"),
+    Output("picked-date-to", "children"),
     Output("date-from", "value"),
     Output("date-to", "value"),
-    [Input("date-from", "value"), Input("date-to", "value")],
-)
-def update_date_from_picker(date_from_str, date_to_str):
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        raise PreventUpdate
-    trigger = ctx.triggered[0]["prop_id"].split(".")[0]
-    date_from = date.fromisoformat(date_from_str)
-    date_to = date.fromisoformat(date_to_str)
-    if date_from > date_to:
-        match trigger:
-            case "date-from":
-                date_to = date_from
-            case "date-to":
-                date_from = date_to
-            case _:
-                raise PreventUpdate
-    return date_from, date_to
-
-
-@app.callback(
-    Output("outdoor-temp-graph", "figure"),
-    Output("rain-graph", "figure"),
     [
         Input("date-from", "value"),
         Input("date-to", "value"),
         Input("check-period", "value"),
     ],
 )
+def update_date_picker(date_from_str, date_to_str, check_period):
+    date_from = date.fromisoformat(date_from_str)
+    date_to = date.fromisoformat(date_to_str)
+    trigger = get_trigger_source()
+    if date_from > date_to:
+        match trigger:
+            case "date-from":
+                date_to = date_from
+            case "date-to":
+                date_from = date_to
+    if trigger == "check-period":
+        match check_period:
+            case "hourly":
+                date_from = date.today() - timedelta(days=1)
+                date_to = date.today()
+            case "daily":
+                date_from = date.today() - timedelta(days=8)
+                date_to = date.today()
+    return 2 * (date_from, date_to)
+
+
+@app.callback(
+    Output("outdoor-temp-graph", "figure"),
+    Output("rain-graph", "figure"),
+    [
+        Input("picked-date-from", "children"),
+        Input("picked-date-to", "children"),
+        State("check-period", "value"),
+    ],
+)
 def update_historical(date_from_str, date_to_str, check_period):
-    date_from = datetime.date.fromisoformat(date_from_str)
-    date_to = (
-        datetime.date.fromisoformat(date_to_str)
-        + timedelta(days=1)
-        - timedelta(minutes=1)
-    )
+    date_from = date.fromisoformat(date_from_str)
+    date_to = date.fromisoformat(date_to_str)
 
     match check_period:
         case "hourly":
