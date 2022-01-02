@@ -138,7 +138,7 @@ app.layout = dbc.Container(
 
 
 def draw_temp_graph(df, time_label):
-    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}, dragmode="select"))
+    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}, dragmode=False))
     text_template = "%{y:.1f}°C" if len(df) <= 30 else None
     fig.add_trace(
         go.Scatter(
@@ -180,7 +180,7 @@ def draw_temp_graph(df, time_label):
 
 
 def draw_rain_graph(df, time_label):
-    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}, dragmode="select"))
+    fig = go.Figure(layout=go.Layout(margin={"l": 0, "r": 0, "t": 20, "b": 20}, dragmode=False))
     fig.add_bar(
         x=df[time_label],
         y=df["rain_mm"],
