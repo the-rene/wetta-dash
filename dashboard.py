@@ -50,7 +50,7 @@ date_form = dbc.Form(
                         dbc.Input(
                             id="date-from",
                             type="date",
-                            value=date.today() - timedelta(days=8),
+                            value=None,
                             min=EARLIEST_DATE,
                             max=date.today(),
                             required=True,
@@ -64,7 +64,7 @@ date_form = dbc.Form(
                         dbc.Input(
                             id="date-to",
                             type="date",
-                            value=date.today(),
+                            value=None,
                             min=EARLIEST_DATE,
                             max=date.today(),
                             required=True,
@@ -230,8 +230,14 @@ def get_trigger_source():
     ],
 )
 def update_date_picker(date_from_str, date_to_str, check_period):
-    date_from = date.fromisoformat(date_from_str)
-    date_to = date.fromisoformat(date_to_str)
+    if date_from_str is None:
+        date_from = date.today() - timedelta(days=8)
+    else:
+        date_from = date.fromisoformat(date_from_str)
+    if date_to_str is None:
+        date_to = date.today()
+    else:
+        date_to = date.fromisoformat(date_to_str)
     trigger = get_trigger_source()
     if date_from > date_to:
         match trigger:
