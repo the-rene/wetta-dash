@@ -1,6 +1,5 @@
 pandas ~=1.3.4
-# dash version which allows date as input field
-https://github.com/the-rene/dash/archive/refs/heads/dev.zip
+dash
 dash-datetimepicker ~= 0.0.6
 mysql-connector-python ~=8.0
 SQLAlchemy ~=1.4.26
