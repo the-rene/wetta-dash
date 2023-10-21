@@ -155,19 +155,16 @@ def dashboard_html():
     for category in CURRENT_DATA_CATEGORIES:
         html_parts.append(
             dbc.Col(
-                dbc.Spinner(
-                    dbc.Card(
-                        children=[
-                            dbc.CardHeader(category),
-                            *[
-                                c.to_html()
-                                for c in CURRENT_DATA_COLUMNS
-                                if c.category == category
-                            ],
+                dbc.Card(
+                    children=[
+                        dbc.CardHeader(category),
+                        *[
+                            c.to_html()
+                            for c in CURRENT_DATA_COLUMNS
+                            if c.category == category
                         ],
-                        class_name="text-white bg-dark",
-                    ),
-                    color="info",
+                    ],
+                    class_name="text-white bg-dark",
                 ),
                 width=4,
             )
